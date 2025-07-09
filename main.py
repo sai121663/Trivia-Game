@@ -25,11 +25,11 @@ BLACK = (0, 0, 0)
 # (choosing the difficulty as "medium" & category as "sports" for beginner purposes)
 player_points = 0
 difficulty = "medium"
-category = random.choice(["sports", "celebrities", "art", "animals", "history"])
 valid_letters = ["A", "B", "C", "D"]
 message = ""
 
 # Fetch first question
+category = random.choice(["sports", "celebrities", "art", "animals", "history"])
 question = fetch_question(difficulty, category)
 choices = question.options
 random.shuffle(choices)
@@ -109,10 +109,12 @@ while running:
                     pygame.time.wait(2000)
 
                     # Fetch next question
+                    category = random.choice(["sports", "celebrities", "art", "animals", "history"])
                     question = fetch_question(difficulty, category)
                     choices = question.options
                     random.shuffle(choices)
                     correct_answer = question.correct_ans
+
 
 # Quit Pygame
 pygame.quit()

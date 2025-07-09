@@ -14,7 +14,9 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Fonts & Colours
 small_font = pygame.font.SysFont("comic sans", 24)
 big_font = pygame.font.SysFont("comic sans", 32)
+bold_font = pygame.font.SysFont("impact", 32)
 WHITE = (255, 255, 255)
+GREY = (128, 128, 128)
 GREEN = (34, 139, 34)
 RED = (200, 50, 50)
 BLUE = (30, 144, 255)
@@ -47,7 +49,7 @@ while running:
 
     # Display SCORE
     score_text = big_font.render(f"Score: {player_points}", True, YELLOW)
-    screen.blit(score_text, (30, 20))
+    screen.blit(score_text, (30, 20))  # Parameters: (screen, position)
 
     # Display QUESTION
     # Breaking the question into chunks of 50 characters, while preserving whole words
@@ -105,6 +107,14 @@ while running:
                     else:
                         screen.blit(wrong_img, (250, 120))
 
+                    # Giving the user an option to QUIT the game
+                    # Parameters: surface, colour, (x, y, width, height)
+                    pygame.draw.rect(screen, GREY, (725, 425, 150, 50))
+
+                    quit_button = pygame.Rect(100, 100, 200, 50)
+                    quit_label = bold_font.render("QUIT", True, RED)
+                    screen.blit(quit_label, (765, 425))
+
                     pygame.display.update()
                     pygame.time.wait(2000)
 
@@ -121,12 +131,6 @@ pygame.quit()
 sys.exit()
 
 # ----------------
-#
-# - ISSUE: The result message (printing whether user is RIGHT or WRONG) isn't being displayed.
-#   https://chatgpt.com/c/6863190e-c17c-800e-92af-25382f2aea6e
-
-# - FIXED ISSUE: A new question is fetched, even when the mouse isn't clicked/
-# - https://chatgpt.com/c/6863190e-c17c-800e-92af-25382f2aea6e
 
 # Instructions:
-# - Continue working on UI and improving buttons
+# - Split code into helper functions (e.g. get_new_question, draw_question, draw_options)

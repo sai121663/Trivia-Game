@@ -4,12 +4,11 @@ import pygame
 import sys
 import random
 import textwrap
-from TriviaApp import fetch_question
+from TriviaApp import fetch_question, TriviaQuestion
 
 # Initializing the game & setting up the display
 pygame.init()
-WIDTH, HEIGHT = 900, 500
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((900, 500))    # (width, height)
 
 # Fonts & Colours
 small_font = pygame.font.SysFont("comic sans", 24)
@@ -24,18 +23,12 @@ YELLOW = (255, 215, 0)
 BLACK = (0, 0, 0)
 
 # Variables for game loop
-# (choosing the difficulty as "medium" & category as "sports" for beginner purposes)
+# (choosing the difficulty as "medium" for beginner purposes)
 player_points = 0
 difficulty = "medium"
 valid_letters = ["A", "B", "C", "D"]
 message = ""
-
-# Fetch first question
-category = random.choice(["sports", "celebrities", "art", "animals", "history"])
-question = fetch_question(difficulty, category)
-choices = question.options
-random.shuffle(choices)
-correct_answer = question.correct_ans
+showing_result = False
 
 # Load CORRECT & WRONG image into pygame
 correct_img = pygame.image.load("that's correct.gif")
@@ -47,19 +40,81 @@ def quit_game() -> None:
 
     # Print the final amount of points
     screen.fill(BLACK)
-    closing_text = big_font.render(f"You ended with {player_points}!", True, YELLOW)
+    closing_text = big_font.render(f"You ended with {player_points} points!", True, YELLOW)
     screen.blit(closing_text, (30, 20))
+
+    # Display an image
+    farewell_img = pygame.image.load("sad_to_leave.jpg")
+    screen.blit(farewell_img, (250, 120))
 
     # Update the display and wait for a few seconds
     pygame.display.update()
     pygame.time.wait(2000)
 
     # Exit the game
+    end_program()
+
+
+def end_program() -> None:
+    """Ends the program."""
     pygame.quit()
     sys.exit()
 
 
-# UNFINISHED Game Loop
+def display_question(ques: TriviaQuestion, topic: str) -> None:
+    """Helper function to visually print the question"""
+
+    # Breaking the question into chunks of 50 characters, while preserving whole words
+    question_text = textwrap.wrap(f"{topic.upper()} - {ques.question}", width=50)
+    for i, line in enumerate(question_text):
+        line_surface = big_font.render(line, True, WHITE)
+        screen.blit(line_surface, (30, 90 + i * 50))  # Stacking the lines 50 pixels apart vertically
+
+
+def display_options(choices_list: list[str]) -> None:
+    """Helper function to visually print the MC options"""
+
+    start_y = 240
+
+    for i, option in enumerate(choices_list):
+        label = f"{valid_letters[i]}. {option}"
+        options_text = small_font.render(label, True, BLUE)
+        pygame.draw.rect(screen, RED, (50, start_y + i * 70, 800, 50), 2)  # Draw rectangle around each option
+        screen.blit(options_text, (60, start_y + i * 70 + 10))
+
+
+def get_new_question(level: str) -> tuple:
+    """Fetching a new question & returning """
+
+    topic = random.choice(["sports", "celebrities", "art", "animals", "history"])
+    ques = fetch_question(level, topic)
+    choices_list = ques.options
+
+    # Randomize the order of the options
+    random.shuffle(choices_list)
+
+    return ques, topic, choices_list
+
+
+def draw_quit_button() -> None:
+    """Drawing the quit button to end the game."""
+
+    # Creating a rect. object (in theory) & initializing the position & size of the "quit" button
+    # Parameters: (x, y, width, height)
+    quit_button = pygame.Rect(725, 425, 150, 50)
+
+    # DRAWING the "quit" button onto the screen
+    pygame.draw.rect(screen, GREY, quit_button)
+
+    # Printing "QUIT" as text
+    quit_label = bold_font.render("QUIT", True, RED)
+    screen.blit(quit_label, (765, 425))
+
+
+# Fetch first question
+question, category, choices = get_new_question(difficulty)
+
+# GAME LOOP
 running = True
 while running:
 
@@ -70,19 +125,10 @@ while running:
     screen.blit(score_text, (30, 20))  # Parameters: (screen, position)
 
     # Display QUESTION
-    # Breaking the question into chunks of 50 characters, while preserving whole words
-    question_text = textwrap.wrap(f"{category.upper()} - {question.question}", width=50)
-    for i, line in enumerate(question_text):
-        line_surface = big_font.render(line, True, WHITE)
-        screen.blit(line_surface, (30, 90 + i * 50))   # Stacking the lines 50 pixels apart vertically
+    display_question(question, category)
 
     # Display ANSWER OPTIONS
-    start_y = 150 + len(question_text) * 30
-    for i, option in enumerate(choices):
-        label = f"{valid_letters[i]}. {option}"
-        options_text = small_font.render(label, True, BLUE)
-        pygame.draw.rect(screen, RED, (50, start_y + i * 70, 800, 50), 2)  # Draw rectangle around each option
-        screen.blit(options_text, (60, start_y + i * 70 + 10))
+    display_options(choices)
 
     pygame.display.update()
 
@@ -91,71 +137,70 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # If the user clicks on an option
+        # If the user clicks on the mouse
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            click_x, click_y = pygame.mouse.get_pos()   # Track x/y position of user's mouse click
+            click_x, click_y = pygame.mouse.get_pos()   # Track (x,y) position of user's mouse click
 
-            for i in range(len(choices)):
-                button_y = start_y + i * 70     # Represents the top of the current option box
+            # Check if the question's result is being displayed
+            if showing_result:
 
-                # Check whether the user clicked on the CURRENT option box
-                if 50 < click_x < 850 and button_y < click_y < button_y + 50:
-                    user_answer = choices[i]
+                # Check if the user clicks on "QUIT"
+                if 725 <= click_x <= 875 and 425 <= click_y <= 475:
+                    quit_game()
+                else:
+                    showing_result = False  # Proceed to next question, hence we're no longer displaying the result
 
-                    # Check user's answer
-                    is_correct, message, player_points = question.check_answer(player_points, user_answer)
+            else:
 
-                    screen.fill(BLACK)
+                for i in range(len(choices)):
+                    button_y = 240 + i * 70     # Represents the top of the current option box
 
-                    # Display result message
-                    message_text = textwrap.wrap(message, width=50)
-                    for k, line in enumerate(message_text):
+                    # Check whether the user clicked on the CURRENT option box
+                    if 50 < click_x < 850 and button_y < click_y < button_y + 50:
+                        user_answer = choices[i]
 
-                        # Message is printed in GREEN if the user's answer is CORRECT, and vice versa.
+                        # Check user's answer
+                        is_correct, message, player_points = question.check_answer(player_points, user_answer)
+
+                        screen.fill(BLACK)
+
+                        # Display result message
+                        message_text = textwrap.wrap(message, width=50)
+                        for k, line in enumerate(message_text):
+
+                            # Message is printed in GREEN if the user's answer is CORRECT, and vice versa.
+                            if is_correct:
+                                message_line = big_font.render(line, True, GREEN)
+                            else:
+                                message_line = big_font.render(line, True, RED)
+
+                            screen.blit(message_line, (30, 30 + k * 50))
+
+                        # Displaying an image telling the user whether they were CORRECT/WRONG
                         if is_correct:
-                            message_line = big_font.render(line, True, GREEN)
+                            screen.blit(correct_img, (250, 120))
                         else:
-                            message_line = big_font.render(line, True, RED)
+                            screen.blit(wrong_img, (250, 120))
 
-                        screen.blit(message_line, (30, 30 + k * 50))
+                        # Giving the user an option to QUIT the game
+                        draw_quit_button()
 
-                    # Displaying an image telling the user whether they were CORRECT/WRONG
-                    if is_correct:
-                        screen.blit(correct_img, (250, 120))
-                    else:
-                        screen.blit(wrong_img, (250, 120))
+                        pygame.display.update()
+                        pygame.time.wait(2000)
 
-                    # Giving the user an option to QUIT the game
-                    # Parameters: surface, colour, (x, y, width, height)
-                    pygame.draw.rect(screen, GREY, (725, 425, 150, 50))
+                        # Fetch next question
+                        question, category, choices = get_new_question(difficulty)
 
-                    quit_button = pygame.Rect(100, 100, 200, 50)
-                    quit_label = bold_font.render("QUIT", True, RED)
-                    screen.blit(quit_label, (765, 425))
-
-                    pygame.display.update()
-                    pygame.time.wait(2000)
-
-                    # Make this only run when the user clicks on "QUIT" button
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        quit_game()
-
-                    # Fetch next question
-                    category = random.choice(["sports", "celebrities", "art", "animals", "history"])
-                    question = fetch_question(difficulty, category)
-                    choices = question.options
-                    random.shuffle(choices)
-                    correct_answer = question.correct_ans
+                        showing_result = True   # We're telling the user if their answer is CORRECT/WRONG now
 
 
 # Quit Pygame
-pygame.quit()
-sys.exit()
+end_program()
 
 # ----------------
 
-# Instructions:
-# - Enable user to click on "QUIT" button that closes the game:
-#   https://chatgpt.com/c/68704ab0-bf14-800e-a104-27d77138a468
+# ISSUE:
+# - User is forced to CLICK TWICE on an option
 
-# - Split code into helper functions (e.g. get_new_question, draw_question, draw_options)
+# Instructions:
+# - Create MAIN MENU

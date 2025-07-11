@@ -104,11 +104,23 @@ def draw_quit_button() -> None:
     quit_button = pygame.Rect(725, 425, 150, 50)
 
     # DRAWING the "quit" button onto the screen
-    pygame.draw.rect(screen, GREY, quit_button)
+    pygame.draw.rect(screen, RED, quit_button)
 
     # Printing "QUIT" as text
-    quit_label = bold_font.render("QUIT", True, RED)
+    quit_label = bold_font.render("QUIT", True, WHITE)
     screen.blit(quit_label, (765, 425))
+
+
+def draw_continue_button() -> None:
+    """Allowing the user to CONTINUE the game."""
+
+    # Creating a rectangle object for the button
+    continue_button = pygame.Rect(500, 425, 175, 50)
+    pygame.draw.rect(screen, GREEN, continue_button)
+
+    # Printing "CONTINUE" as text
+    continue_label = bold_font.render("CONTINUE", True, WHITE)
+    screen.blit(continue_label, (525, 425))
 
 
 # Fetch first question
@@ -178,11 +190,12 @@ while running:
 
                         # Displaying an image telling the user whether they were CORRECT/WRONG
                         if is_correct:
-                            screen.blit(correct_img, (250, 120))
+                            screen.blit(correct_img, (250, 100))
                         else:
-                            screen.blit(wrong_img, (250, 120))
+                            screen.blit(wrong_img, (250, 100))
 
-                        # Giving the user an option to QUIT the game
+                        # Giving the user an option to CONTINUE or QUIT the game
+                        draw_continue_button()
                         draw_quit_button()
 
                         pygame.display.update()
@@ -193,14 +206,13 @@ while running:
 
                         showing_result = True   # We're telling the user if their answer is CORRECT/WRONG now
 
-
 # Quit Pygame
 end_program()
 
 # ----------------
-
 # ISSUE:
-# - User is forced to CLICK TWICE on an option
+# - Make the user click on either CONTINUE or EXIT each time
+#   https://chatgpt.com/c/68718d78-1294-800e-9379-82f982bd586c
 
 # Instructions:
 # - Create MAIN MENU

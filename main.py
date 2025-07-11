@@ -41,6 +41,24 @@ correct_answer = question.correct_ans
 correct_img = pygame.image.load("that's correct.gif")
 wrong_img = pygame.image.load("that's wrong.gif")
 
+
+def quit_game() -> None:
+    """Quits the game."""
+
+    # Print the final amount of points
+    screen.fill(BLACK)
+    closing_text = big_font.render(f"You ended with {player_points}!", True, YELLOW)
+    screen.blit(closing_text, (30, 20))
+
+    # Update the display and wait for a few seconds
+    pygame.display.update()
+    pygame.time.wait(2000)
+
+    # Exit the game
+    pygame.quit()
+    sys.exit()
+
+
 # UNFINISHED Game Loop
 running = True
 while running:
@@ -61,7 +79,7 @@ while running:
     # Display ANSWER OPTIONS
     start_y = 150 + len(question_text) * 30
     for i, option in enumerate(choices):
-        label = f"{valid_letters[i]}: {option}"
+        label = f"{valid_letters[i]}. {option}"
         options_text = small_font.render(label, True, BLUE)
         pygame.draw.rect(screen, RED, (50, start_y + i * 70, 800, 50), 2)  # Draw rectangle around each option
         screen.blit(options_text, (60, start_y + i * 70 + 10))
@@ -118,6 +136,10 @@ while running:
                     pygame.display.update()
                     pygame.time.wait(2000)
 
+                    # Make this only run when the user clicks on "QUIT" button
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        quit_game()
+
                     # Fetch next question
                     category = random.choice(["sports", "celebrities", "art", "animals", "history"])
                     question = fetch_question(difficulty, category)
@@ -133,4 +155,7 @@ sys.exit()
 # ----------------
 
 # Instructions:
+# - Enable user to click on "QUIT" button that closes the game:
+#   https://chatgpt.com/c/68704ab0-bf14-800e-a104-27d77138a468
+
 # - Split code into helper functions (e.g. get_new_question, draw_question, draw_options)

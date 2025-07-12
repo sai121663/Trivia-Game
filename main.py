@@ -29,6 +29,7 @@ difficulty = "medium"
 valid_letters = ["A", "B", "C", "D"]
 message = ""
 showing_result = False
+is_correct = False
 
 # Load CORRECT & WRONG image into pygame
 correct_img = pygame.image.load("that's correct.gif")
@@ -132,19 +133,50 @@ while running:
 
     screen.fill(BLACK)
 
-    # Display SCORE
-    score_text = big_font.render(f"Score: {player_points}", True, YELLOW)
-    screen.blit(score_text, (30, 20))  # Parameters: (screen, position)
+    # DRAWING BLOCK
+    # Handles the display of the RESULT SCREEN
+    if showing_result:
 
-    # Display QUESTION
-    display_question(question, category)
+        # Display result message
+        message_text = textwrap.wrap(message, width=50)
+        for k, line in enumerate(message_text):
 
-    # Display ANSWER OPTIONS
-    display_options(choices)
+            # Message is printed in GREEN if the user's answer is CORRECT, and vice versa.
+            if is_correct:
+                message_line = big_font.render(line, True, GREEN)
+            else:
+                message_line = big_font.render(line, True, RED)
 
-    pygame.display.update()
+            screen.blit(message_line, (30, 30 + k * 50))
 
-    # Implement mouse events (allow user to CLICK on buttons)
+        # Displaying an image telling the user whether they were CORRECT/WRONG
+        if is_correct:
+            screen.blit(correct_img, (250, 100))
+        else:
+            screen.blit(wrong_img, (250, 100))
+
+        # Giving the user an option to CONTINUE or QUIT the game
+        draw_continue_button()
+        draw_quit_button()
+
+        pygame.display.update()
+
+    # Handles the display of the QUESTION SCREEN
+    else:
+
+        # Display SCORE
+        score_text = big_font.render(f"Score: {player_points}", True, YELLOW)
+        screen.blit(score_text, (30, 20))  # Parameters: (screen, position)
+
+        # Display QUESTION
+        display_question(question, category)
+
+        # Display ANSWER OPTIONS
+        display_options(choices)
+
+        pygame.display.update()
+
+    # Handles USER INPUT
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -153,15 +185,22 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click_x, click_y = pygame.mouse.get_pos()   # Track (x,y) position of user's mouse click
 
-            # Check if the question's result is being displayed
+            # Handles the case where the user clicks on "CONTINUE" or "QUIT"
             if showing_result:
 
                 # Check if the user clicks on "QUIT"
                 if 725 <= click_x <= 875 and 425 <= click_y <= 475:
                     quit_game()
-                else:
+                    showing_result = False
+
+                # Check if the user clicks on "CONTINUE"
+                elif 500 <= click_x <= 675 and 425 <= click_y <= 475:
+
+                    # Fetch next question
+                    question, category, choices = get_new_question(difficulty)
                     showing_result = False  # Proceed to next question, hence we're no longer displaying the result
 
+            # Handles the case where the user clicks on an option
             else:
 
                 for i in range(len(choices)):
@@ -174,37 +213,9 @@ while running:
                         # Check user's answer
                         is_correct, message, player_points = question.check_answer(player_points, user_answer)
 
-                        screen.fill(BLACK)
-
-                        # Display result message
-                        message_text = textwrap.wrap(message, width=50)
-                        for k, line in enumerate(message_text):
-
-                            # Message is printed in GREEN if the user's answer is CORRECT, and vice versa.
-                            if is_correct:
-                                message_line = big_font.render(line, True, GREEN)
-                            else:
-                                message_line = big_font.render(line, True, RED)
-
-                            screen.blit(message_line, (30, 30 + k * 50))
-
-                        # Displaying an image telling the user whether they were CORRECT/WRONG
-                        if is_correct:
-                            screen.blit(correct_img, (250, 100))
-                        else:
-                            screen.blit(wrong_img, (250, 100))
-
-                        # Giving the user an option to CONTINUE or QUIT the game
-                        draw_continue_button()
-                        draw_quit_button()
-
                         pygame.display.update()
-                        pygame.time.wait(2000)
 
-                        # Fetch next question
-                        question, category, choices = get_new_question(difficulty)
-
-                        showing_result = True   # We're telling the user if their answer is CORRECT/WRONG now
+                        showing_result = True   # Move to RESULT SCREEN now
 
 # Quit Pygame
 end_program()

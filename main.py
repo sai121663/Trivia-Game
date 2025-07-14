@@ -4,6 +4,7 @@ import pygame
 import sys
 import random
 import textwrap
+from typing import Optional
 from TriviaApp import fetch_question, TriviaQuestion
 
 # Initializing the game & setting up the display
@@ -13,7 +14,8 @@ screen = pygame.display.set_mode((900, 500))    # (width, height)
 # Fonts & Colours
 fonts = {'small_font': pygame.font.SysFont("comic sans", 24),
          'big_font': pygame.font.SysFont("comic sans", 32),
-         'bold_font': pygame.font.SysFont("impact", 32)}
+         'bold_font': pygame.font.SysFont("impact", 32),
+         'title_font': pygame.font.SysFont("chelsea market", 64)}
 
 colours = {'WHITE': (255, 255, 255), 'GREY': (128, 128, 128), 'GREEN': (34, 139, 34), 'RED': (200, 50, 50),
            'BLUE': (30, 144, 255), 'YELLOW': (255, 215, 0), 'BLACK': (0, 0, 0)}
@@ -22,11 +24,13 @@ colours = {'WHITE': (255, 255, 255), 'GREY': (128, 128, 128), 'GREEN': (34, 139,
 # (choosing the difficulty as "medium" for beginner purposes)
 player_points = 0
 difficulty = "medium"
+categories = ["sports", "celebrities", "art", "animals", "history"]
 valid_letters = ["A", "B", "C", "D"]
 message = ""
 showing_result = False
 is_correct = False
 game_state = "menu"
+topic = None
 
 # Load CORRECT & WRONG image into pygame
 correct_img = pygame.image.load("that's correct.gif")
@@ -75,8 +79,7 @@ def display_options(choices_list: list[str]) -> None:
     start_y = 240
 
     for i, option in enumerate(choices_list):
-        label = f"{valid_letters[i]}. {option}"
-        options_text = fonts['small_font'].render(label, True, colours['BLUE'])
+        options_text = fonts['small_font'].render(f"{valid_letters[i]}. {option}", True, colours['BLUE'])
 
         # Draw rectangle around each option
         pygame.draw.rect(screen, colours['RED'], (50, start_y + i * 70, 800, 50), 2)
@@ -86,14 +89,13 @@ def display_options(choices_list: list[str]) -> None:
 def get_new_question(level: str) -> tuple:
     """Fetching a new question & returning """
 
-    topic = random.choice(["sports", "celebrities", "art", "animals", "history"])
     ques = fetch_question(level, topic)
     choices_list = ques.options
 
     # Randomize the order of the options
     random.shuffle(choices_list)
 
-    return ques, topic, choices_list
+    return ques, choices_list
 
 
 def draw_quit_button() -> None:
@@ -123,22 +125,73 @@ def draw_continue_button() -> None:
     screen.blit(continue_label, (525, 425))
 
 
-def main_menu() -> None:
+def draw_categories() -> None:
+    """Drawing buttons for the five categories."""
+
+    for i, topic in enumerate(categories):
+
+        # Since we need 3 boxes on the left & 2 on the right, we calculate different x/y positions for the latter
+        # categories
+        if i < 3:
+            x = 50
+            y = 200 + i * 100
+        else:
+            x = 500
+            y = 200 + (i - 3) * 100
+
+        # Drawing button rectangles
+        # (screen, colour, (x, y, width, height))
+        pygame.draw.rect(screen, colours['RED'], (x, y, 350, 70))
+
+        # Drawing button labels
+        label = fonts['big_font'].render(f"{topic.upper()}", True, colours['WHITE'])
+        screen.blit(label, (x + 20, y + 10))
+
+
+def main_menu() -> Optional[str]:
     """Displaying the MAIN MENU."""
 
     screen.fill(colours["BLACK"])
 
-    # Printing the game's title
     pygame.draw.rect(screen, colours["YELLOW"], (0, 0, 900, 100))
 
-    game_title = fonts['bold_font'].render("TRIVIA.IO", True, colours['BLACK'])
-    screen.blit(game_title, (375, 50))
+    # Creating a SHADOW
+    shadow = fonts['title_font'].render("BRAINFUSE", True, colours['BLACK'])
+    screen.blit(shadow, (322, 30))
+
+    # Printing the game's title
+    game_title = fonts['title_font'].render("BRAINFUSE", True, colours['WHITE'])
+    screen.blit(game_title, (325, 35))
+
+    # Prompting user to select a CATEGORY
+    select_category = fonts['big_font'].render("Select your CATEGORY:", True, colours['WHITE'])
+    screen.blit(select_category, (40, 110))
+
+    # Helper function to draw the categories
+    draw_categories()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        # If the user clicks on the mouse
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            click_x, click_y = pygame.mouse.get_pos()
+
+            for k in range(len(categories)):
+                if k < 3:
+                    button_x = 50   # Starting X position of current option box
+                    button_y = 200 + k * 100    # Starting Y position of current option box
+                else:
+                    button_x = 500
+                    button_y = 200 + (k - 3) * 100
+
+                if button_x <= click_x <= button_x + 350 and button_y <= click_y <= button_y + 70:
+                    return categories[k]
 
     pygame.display.update()
+    return None
 
-
-# Fetch first question
-question, category, choices = get_new_question(difficulty)
 
 # GAME LOOP
 running = True
@@ -146,10 +199,15 @@ while running:
 
     # Displaying the MENU; game hasn't started
     if game_state == "menu":
-        main_menu()
+        while not topic:
+            topic = main_menu()
+        game_state = "playing"
 
     # Game has started
     elif game_state == "playing":
+
+        # Fetch first question
+        question, choices = get_new_question(difficulty)
 
         screen.fill(colours['BLACK'])
 
@@ -189,7 +247,7 @@ while running:
             screen.blit(score_text, (30, 20))  # Parameters: (screen, position)
 
             # Display QUESTION
-            display_question(question, category)
+            display_question(question, topic)
 
             # Display ANSWER OPTIONS
             display_options(choices)
@@ -217,7 +275,7 @@ while running:
                     elif 500 <= click_x <= 675 and 425 <= click_y <= 475:
 
                         # Fetch next question
-                        question, category, choices = get_new_question(difficulty)
+                        question, choices = get_new_question(difficulty)
                         showing_result = False  # Proceed to next question, hence we're no longer displaying the result
 
                 # Handles the case where the user clicks on an option
@@ -241,6 +299,9 @@ while running:
 end_program()
 
 # ----------------
+# ISSUE:
+# - Game doesn't process answer for the first question & skips straight to the second question
+
 # Instructions:
 # - Create MAIN MENU:
 # https://chatgpt.com/c/68718d78-1294-800e-9379-82f982bd586c

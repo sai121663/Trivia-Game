@@ -31,10 +31,11 @@ showing_result = False
 is_correct = False
 game_state = "menu"
 topic = None
+clock = pygame.time.Clock()
 
 # Load CORRECT & WRONG image into pygame
-correct_img = pygame.image.load("that's correct.gif")
-wrong_img = pygame.image.load("that's wrong.gif")
+correct_img = pygame.image.load("that's correct.gif").convert()
+wrong_img = pygame.image.load("that's wrong.gif").convert()
 
 
 def quit_game() -> None:
@@ -46,7 +47,7 @@ def quit_game() -> None:
     screen.blit(closing_text, (30, 20))
 
     # Display an image
-    farewell_img = pygame.image.load("sad_to_leave.jpg")
+    farewell_img = pygame.image.load("sad_to_leave.jpg").convert()
     screen.blit(farewell_img, (250, 120))
 
     # Update the display and wait for a few seconds
@@ -193,6 +194,36 @@ def main_menu() -> Optional[str]:
     return None
 
 
+def disclaimer() -> None:
+    """Printing a disclaimer message, before the game starts, advising the user to avoid clicking too fast."""
+
+    screen.fill(colours['BLACK'])
+
+    # Displaying text & warning the user to click SLOWLY
+    disclaimer1 = fonts['title_font'].render("GLITCHY:", True, colours['RED'])
+    screen.blit(disclaimer1, (150, 200))
+    disclaimer2 = fonts['big_font'].render("Please click SLOWLY!", True, colours['WHITE'])
+    screen.blit(disclaimer2, (375, 200))
+    press_enter_msg = fonts['small_font'].render("(ENTER to continue)", True, colours['GREEN'])
+    screen.blit(press_enter_msg, (325, 275))
+
+    # Image of a turtle
+    turtle_img = pygame.image.load("turtle.png").convert()
+    screen.blit(turtle_img, (650, 350))
+
+    pygame.display.update()
+
+    read_disclaimer_msg = False
+    while not read_disclaimer_msg:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN: # Checking if the user has pressed ENTER
+                    read_disclaimer_msg = True
+
+
 # GAME LOOP
 running = True
 while running:
@@ -201,13 +232,17 @@ while running:
     if game_state == "menu":
         while not topic:
             topic = main_menu()
+
+        disclaimer()
+
+        # Fetch first question
+        # Written before changing the game_state to "playing" for a more efficient runtime
+        question, choices = get_new_question(difficulty)
+
         game_state = "playing"
 
     # Game has started
     elif game_state == "playing":
-
-        # Fetch first question
-        question, choices = get_new_question(difficulty)
 
         screen.fill(colours['BLACK'])
 
@@ -293,15 +328,14 @@ while running:
 
                             pygame.display.update()
 
-                            showing_result = True   # Move to RESULT SCREEN now
+                            showing_result = True  # Move to RESULT SCREEN now
+
+    clock.tick(60)      # Prevents glitches by ensuring the game runs at a reasonable speed
 
 # Quit Pygame
 end_program()
 
 # ----------------
-# ISSUE:
-# - Game doesn't process answer for the first question & skips straight to the second question
-
 # Instructions:
-# - Create MAIN MENU:
+# - Clean up TriviaApp.py
 # https://chatgpt.com/c/68718d78-1294-800e-9379-82f982bd586c

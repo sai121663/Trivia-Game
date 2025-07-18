@@ -173,7 +173,7 @@ def main_menu() -> Optional[str]:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            end_program()
 
         # If the user clicks on the mouse
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -213,15 +213,15 @@ def disclaimer() -> None:
 
     pygame.display.update()
 
-    read_disclaimer_msg = False
-    while not read_disclaimer_msg:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                end_program()   # I have to manually call the "end_program" function here, whereas in the game loop,
+                # "end_program" was called by default after exiting the while loop.
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN: # Checking if the user has pressed ENTER
-                    read_disclaimer_msg = True
+                if event.key == pygame.K_RETURN:    # Checking if the user has pressed ENTER
+                    return
 
 
 # GAME LOOP

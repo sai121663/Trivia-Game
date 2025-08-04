@@ -111,7 +111,9 @@ def draw_quit_button() -> None:
 
     # Printing "QUIT" as text
     quit_label = fonts['bold_font'].render("QUIT", True, colours['WHITE'])
-    screen.blit(quit_label, (765, 425))
+    rect_text = quit_label.get_rect(center=quit_button.center)
+
+    screen.blit(quit_label, rect_text)
 
 
 def draw_continue_button() -> None:
@@ -123,7 +125,8 @@ def draw_continue_button() -> None:
 
     # Printing "CONTINUE" as text
     continue_label = fonts['bold_font'].render("CONTINUE", True, colours['WHITE'])
-    screen.blit(continue_label, (525, 425))
+    rect_text = continue_label.get_rect(center=continue_button.center)      # Centers the text inside the rectangle
+    screen.blit(continue_label, rect_text)
 
 
 def draw_categories() -> None:
@@ -142,11 +145,14 @@ def draw_categories() -> None:
 
         # Drawing button rectangles
         # (screen, colour, (x, y, width, height))
-        pygame.draw.rect(screen, colours['RED'], (x, y, 350, 70))
+        rect_button = pygame.Rect(x, y, 350, 70)
+        pygame.draw.rect(screen, colours['RED'], rect_button)
 
         # Drawing button labels
         label = fonts['big_font'].render(f"{topic.upper()}", True, colours['WHITE'])
-        screen.blit(label, (x + 20, y + 10))
+        rect_text = label.get_rect(center=rect_button.center)   # Centres the text inside the button
+
+        screen.blit(label, rect_text)
 
 
 def main_menu() -> Optional[str]:
